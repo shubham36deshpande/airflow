@@ -39,16 +39,38 @@ def _generate_venv_cmd(tmp_dir: str, python_bin: str, system_site_packages: bool
     return cmd
 
 
-def _generate_pip_install_cmd_from_file(
-    tmp_dir: str, requirements_file_path: str, pip_install_options: list[str]
-) -> list[str]:
-    return [f"{tmp_dir}/bin/pip", "install", *pip_install_options, "-r", requirements_file_path]
+def _generate_install_cmd_from_list(
+    venv_directory: str, requirements: List[str], install_options: List[str], installer: str) -> List[str]:
+    """
+    Generate the command to install packages using the specified installer.
+
+    :param venv_directory: Path to the virtual environment directory.
+    :param requirements: List of packages to install.
+    :param install_options: Additional options for the installer.
+    :param installer: The package installer to use ('pip' or 'uv').
+    :return: List of command components to execute.
+    """
+    if installer == "uv":
+        return [f"{venv_directory}/bin/uv", "pip", "install", *install_options, *requirements]
+    else:
+        return [f"{venv_directory}/bin/pip", "install", *install_options, *requirements]
 
 
-def _generate_pip_install_cmd_from_list(
-    tmp_dir: str, requirements: list[str], pip_install_options: list[str]
-) -> list[str]:
-    return [f"{tmp_dir}/bin/pip", "install", *pip_install_options, *requirements]
+def _generate_install_cmd_from_file(
+    venv_directory: str, requirements_file_path: str, install_options: List[str], installer: str) -> List[str]:
+    """
+    Generate the command to install packages from a requirements file using the specified installer.
+
+    :param venv_directory: Path to the virtual environment directory.
+    :param requirements_file_path: Path to the requirements.txt file.
+    :param install_options: Additional options for the installer.
+    :param installer: The package installer to use ('pip' or 'uv').
+    :return: List of command components to execute.
+    """
+    if installer == "uv":
+        return [f"{venv_directory}/bin/uv", "pip", "install", *install_options, "-r", requirements_file_path]
+    else:
+        return [f"{venv_directory}/bin/pip", "install", *install_options, "-r", requirements_file_path]
 
 
 def _generate_pip_conf(conf_file: Path, index_urls: list[str]) -> None:
@@ -69,6 +91,7 @@ def prepare_virtualenv(
     requirements_file_path: str | None = None,
     pip_install_options: list[str] | None = None,
     index_urls: list[str] | None = None,
+    installer: str = "pip",
 ) -> str:
     """
     Create a virtual environment and install the additional python packages.
@@ -83,7 +106,9 @@ def prepare_virtualenv(
         See 'pip install -h' for available options
     :param index_urls: an optional list of index urls to load Python packages from.
         If not provided the system pip conf will be used to source packages from.
+    :param installer: The package installer to use 'pip' or 'uv'. Default -> 'pip'.
     :return: Path to a binary file with Python in a virtual environment.
+    
     """
     if pip_install_options is None:
         pip_install_options = []
