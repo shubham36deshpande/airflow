@@ -652,6 +652,7 @@ class PythonVirtualenvOperator(_BasePythonVirtualenvOperator):
         the args and result (pickle is default). This allows more complex types
         but requires you to include dill in your requirements.
     :param use_airflow_context: Whether to provide ``get_current_context()`` to the python_callable.
+    :params installer: The package installer to use 'pip' or 'uv'. Default -> 'pip'.
     """
 
     template_fields: Sequence[str] = tuple(
@@ -681,6 +682,7 @@ class PythonVirtualenvOperator(_BasePythonVirtualenvOperator):
         inherit_env: bool = True,
         use_dill: bool = False,
         use_airflow_context: bool = False,
+        installer: str = 'pip',
         **kwargs,
     ):
         if (
@@ -760,6 +762,7 @@ class PythonVirtualenvOperator(_BasePythonVirtualenvOperator):
             requirements_file_path=str(requirements_file),
             pip_install_options=self.pip_install_options,
             index_urls=self.index_urls,
+            installer=self.installer
         )
 
     def _calculate_cache_hash(self, exclude_cloudpickle: bool = False) -> tuple[str, str]:
